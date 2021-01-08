@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import { filter } from 'bluebird';
 
 (async () => {
 
@@ -28,7 +29,17 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
-
+  app.get('/filteredimage', async (req,res) => {
+    try{
+      const { image_url } = req.query;
+      if( !image_url ) return res.status(400).send('image_url query required');
+      const filteredImg = await filterImageFromURL(image_url);
+      res.status(200).sendFile(filteredImg);
+      res.on('finish', () => deleteLocalFiles([filteredImg]));
+    }catch(e){
+      res.status(500).send('Error')
+    }
+  });
   //! END @TODO1
   
   // Root Endpoint
